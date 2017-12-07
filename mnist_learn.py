@@ -9,7 +9,7 @@ LR = 0.005
 def build_layer(in_tensor, out_size, name):
   in_size = in_tensor.get_shape().dims[1].value
   with tf.name_scope(name):
-    w = tf.truncated_normal([in_size, out_size], stddev=0.1, name='weights')
+    w = tf.Variable(tf.truncated_normal([in_size, out_size], stddev=0.1), name='weights')
     # w = tf.Variable(tf.zeros([in_size, out_size]), name='weights')
     b = tf.Variable(tf.zeros([out_size]), name='bias')
     # return tf.nn.relu(tf.matmul(in_tensor, w) + b)
@@ -18,8 +18,8 @@ def build_layer(in_tensor, out_size, name):
 def build_output_layer(in_tensor, out_size, name):
   in_size = in_tensor.get_shape().dims[1].value
   with tf.name_scope(name):
-    #w = tf.truncated_normal([in_size, out_size], stddev=0.1, name='weights')
-    w = tf.Variable(tf.zeros([in_size, out_size]), name='weights')
+    w = tf.Variable(tf.truncated_normal([in_size, out_size], stddev=0.1), name='weights')
+    # w = tf.Variable(tf.zeros([in_size, out_size]), name='weights')
     b = tf.Variable(tf.zeros([out_size]), name='bias')
     return tf.nn.softmax(tf.matmul(in_tensor, w) + b)
 
@@ -78,8 +78,7 @@ def train(features, labels, train_step, merged_summary, steps=1000):
 def main():
   features = tf.placeholder(tf.float32, shape=[None, 28 * 28], name='features')
   labels = tf.placeholder(tf.float32, shape=[None, 10], name='labels')
-  # accuracy, loss, train_step = build_network(features, labels, [200, 100, 60, 30])
-  accuracy, loss, train_step = build_network(features, labels, [])
+  accuracy, loss, train_step = build_network(features, labels, [200, 100, 60, 30])
 
   tf.summary.scalar('accuracy', accuracy)
   tf.summary.scalar('loss', loss)

@@ -57,7 +57,7 @@ def build_loss(output, labels):
 def build_train_step(loss):
   with tf.name_scope('train'):
     lr = tf.placeholder(tf.float32, name='learning_rate')
-    train_step = tf.train.AdamOptimizer(0.005).minimize(loss)
+    train_step = tf.train.AdamOptimizer(lr).minimize(loss)
     return lr, train_step
 
 

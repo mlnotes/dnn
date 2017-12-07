@@ -6,6 +6,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 LOG_DIR = '/tmp/mnist_cnn'
 STEPS = 10000
+pkeep = tf.placeholder(tf.float32, name='pkeep')
 
 def build_conv_layer(in_tensor, filter_height, filter_width, out_channels, stride, name):
   in_channels = in_tensor.get_shape().dims[3].value
@@ -27,7 +28,7 @@ def build_fc_layer(in_tensor, out_size, name):
     b = tf.Variable(tf.zeros([out_size]), name='bias')
     #output = tf.nn.softmax(tf.matmul(in_tensor, w) + b)
     output = tf.nn.relu(tf.matmul(in_tensor, w) + b)
-    return output
+    return tf.nn.dropout(output, pkeep)
 
 def build_softmax_layer(in_tensor, labels, name):
   in_size = in_tensor.get_shape().dims[1].value
@@ -102,15 +103,22 @@ def main():
   for i in range(STEPS):
     images, digits = mnist.train.next_batch(100)
     curr_lr = min_lr + (max_lr - min_lr) * math.exp(-i / decay_speed)
+    sess.run(train_step, feed_dict={features: images,
+                                    labels: digits,
+                                    lr: curr_lr,
+                                    pkeep: 0.75})
+
     if i % 10 == 0:
       summary = sess.run(merged, feed_dict={features: mnist.test.images,
                                             labels: mnist.test.labels,
-                                            lr: curr_lr})
+                                            lr: curr_lr,
+                                            pkeep: 1.0})
       test_writer.add_summary(summary, i)
 
-    summary, _ = sess.run([merged, train_step], feed_dict={features: images,
-                                                           labels: digits,
-                                                           lr: curr_lr})
+    summary = sess.run(merged, feed_dict={features: images,
+                                          labels: digits,
+                                          lr: curr_lr,
+                                          pkeep: 1.0})
     train_writer.add_summary(summary, i)
 
 

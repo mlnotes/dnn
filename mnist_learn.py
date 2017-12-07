@@ -25,9 +25,10 @@ def build_output_layer(in_tensor, out_size, name):
     b = tf.Variable(tf.zeros([out_size]), name='bias')
     return tf.nn.softmax(tf.matmul(in_tensor, w) + b)
 
-def build_loss(out_tensor, label):
+def build_loss(out_tensor, labels):
   with tf.name_scope('loss'):
-    cross_entropy = -tf.reduce_mean(tf.reduce_sum(out_tensor * label, reduction_indices=[1]))
+    cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+        logits=out_tensor, labels=labels))
     return cross_entropy
 
 def build_accuracy(output, labels):

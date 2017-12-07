@@ -6,6 +6,7 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 LOG_DIR = '/tmp/mnist_logs'
 STEPS = 10000
+pkeep = tf.placeholder(tf.float32, name='pkeep')
 
 def build_layer(in_tensor, out_size, name):
   in_size = in_tensor.get_shape().dims[1].value
@@ -13,8 +14,8 @@ def build_layer(in_tensor, out_size, name):
     w = tf.Variable(tf.truncated_normal([in_size, out_size], stddev=0.1), name='weights')
     # w = tf.Variable(tf.zeros([in_size, out_size]), name='weights')
     b = tf.Variable(tf.zeros([out_size]), name='bias')
-    return tf.nn.relu(tf.matmul(in_tensor, w) + b)
-    # return tf.nn.sigmoid(tf.matmul(in_tensor, w) + b)
+    out = tf.nn.relu(tf.matmul(in_tensor, w) + b)
+    return tf.nn.dropout(out, pkeep)
 
 def build_output_layer(in_tensor, out_size, name):
   in_size = in_tensor.get_shape().dims[1].value
@@ -77,11 +78,18 @@ def train(features, labels, lr, train_step, merged_summary, steps=1000):
     if i % 10 == 0:
       summary = sess.run(merged_summary, feed_dict={features: mnist.test.images,
                                                     labels: mnist.test.labels,
-                                                    lr: curr_lr})
+                                                    lr: curr_lr, pkeep: 1.0})
       test_writer.add_summary(summary, i)
-    summary, _ = sess.run([merged_summary, train_step],
-                          feed_dict={features: images, labels: digits, lr: curr_lr})
+
+    summary = sess.run(merged_summary,
+                       feed_dict={features: images,
+                                  labels: digits,
+                                  lr: curr_lr,
+                                  pkeep: 1.0})
     train_writer.add_summary(summary, i)
+
+    # Training
+    sess.run(train_step, feed_dict={features: images, labels: digits, lr:curr_lr, pkeep: 0.75})
 
 
 def main():

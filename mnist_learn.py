@@ -13,7 +13,8 @@ def build_layer(in_tensor, out_size, name):
   with tf.name_scope(name):
     w = tf.Variable(tf.truncated_normal([in_size, out_size], stddev=0.1), name='weights')
     # w = tf.Variable(tf.zeros([in_size, out_size]), name='weights')
-    b = tf.Variable(tf.zeros([out_size]), name='bias')
+    # b = tf.Variable(tf.zeros([out_size]), name='bias')
+    b = tf.Variable(tf.constant(0.1, tf.float32, [out_size]), name='bias')
     out = tf.nn.relu(tf.matmul(in_tensor, w) + b)
     return tf.nn.dropout(out, pkeep)
 
@@ -90,7 +91,18 @@ def train(features, labels, lr, train_step, merged_summary, steps=1000):
     train_writer.add_summary(summary, i)
 
     # Training
-    sess.run(train_step, feed_dict={features: images, labels: digits, lr:curr_lr, pkeep: 0.75})
+    if i % 10 == 0:
+      run_options = tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE)
+      run_metadata = tf.RunMetadata()
+      sess.run(train_step,
+               options=run_options,
+               run_metadata=run_metadata,
+               feed_dict={features: images, labels: digits, lr:curr_lr, pkeep: 0.75})
+      train_writer.add_run_metadata(run_metadata, 'step%d' % i)
+    else:
+      sess.run(train_step, feed_dict={features: images, labels: digits, lr:curr_lr, pkeep: 0.75})
+  train_writer.close()
+  test_writer.close()
 
 
 def main():

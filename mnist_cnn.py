@@ -20,6 +20,13 @@ def build_conv_layer(in_tensor, filter_height, filter_width, out_channels, strid
     conv = tf.nn.conv2d(in_tensor, filter, strides=[1, stride, stride, 1], padding='SAME', name='conv')
     return tf.nn.relu(conv + bias)
 
+def build_pool_layer(in_tensor, filter_height, filter_width, stride, name):
+  with tf.name_scope(name):
+    ksize = [1, filter_height, filter_width, 1]
+    strides = [1, stride, stride, 1]
+    return tf.nn.max_pool(in_tensor, ksize, strides, padding='SAME', name='max_pool')
+
+
 def build_fc_layer(in_tensor, out_size, name):
   in_size = in_tensor.get_shape().dims[1].value
 
@@ -77,22 +84,45 @@ def build_cnn_network(features, labels):
 
   return accuracy, loss, lr, train_step, l1_out, l2_out, l3_out
 
+def build_cnn_with_pool(features, labels):
+  # l1_out is [-1, 28, 28, 4]
+  l1_out = build_conv_layer(features, 5, 5, 4, 1, 'l1_conv')
+  # l2_out is [-1, 14, 14, 4]
+  l2_out = build_pool_layer(l1_out, 2, 2, 2, 'l2_pool')
+  # l3_out is [-1, 14, 14, 8]
+  l3_out = build_conv_layer(l2_out, 5, 5, 8, 1, 'l3_conv')
+  # l4_out is [-1, 7, 7, 8]
+  l4_out = build_pool_layer(l3_out, 2, 2, 2, 'l4_pool')
+  
+  # reshape
+  fc_input = tf.reshape(l4_out, shape=[-1, 7 * 7 * 8])
+  #l5_out is [-1, 200]
+  fc_out = build_fc_layer(fc_input, 200, 'fc_layer')
+  output = build_softmax_layer(fc_out, labels, 'softmax_layer')
+
+  accuracy = build_accuracy(output, labels)
+  loss = build_loss(output, labels)
+  lr, train_step = build_train_step(loss)
+
+  return accuracy, loss, lr, train_step
+
 
 def main():
   features = tf.placeholder(tf.float32, [None, 28, 28, 1])
   labels = tf.placeholder(tf.float32, [None, 10])
-  accuracy, loss, lr, train_step, l1_out, l2_out, l3_out = build_cnn_network(features, labels)
+  #accuracy, loss, lr, train_step, l1_out, l2_out, l3_out = build_cnn_network(features, labels)
+  accuracy, loss, lr, train_step = build_cnn_with_pool(features, labels)
 
   tf.summary.scalar('accuracy', accuracy)
   tf.summary.scalar('loss', loss)
   tf.summary.scalar('lr', lr)
-  tf.summary.image('l1_out', l1_out)
+  #tf.summary.image('l1_out', l1_out)
 
   # l2_out [None, 14, 14, 8]
-  tf.summary.image('l2_out', tf.reshape(l2_out, [-1, 14, 28, 4]))
+  #tf.summary.image('l2_out', tf.reshape(l2_out, [-1, 14, 28, 4]))
 
   # l3_out [None, 7, 7, 12]
-  tf.summary.image('l3_out', tf.reshape(l3_out, [-1, 7, 21, 4]))
+  #tf.summary.image('l3_out', tf.reshape(l3_out, [-1, 7, 21, 4]))
   merged = tf.summary.merge_all()
 
   sess = tf.InteractiveSession()

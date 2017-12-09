@@ -44,7 +44,8 @@ def build_softmax_layer(in_tensor, labels, name):
   with tf.name_scope(name):
     w = tf.Variable(tf.truncated_normal([in_size, out_size], stddev=0.1), name='weights')
     b = tf.Variable(tf.zeros([out_size]), name='bias')
-    output = tf.nn.softmax(tf.matmul(in_tensor, w) + b)
+    #output = tf.nn.softmax(tf.matmul(in_tensor, w) + b)
+    output = tf.matmul(in_tensor, w) + b
     return output
 
 
@@ -93,7 +94,7 @@ def build_cnn_with_pool(features, labels):
   l3_out = build_conv_layer(l2_out, 5, 5, 8, 1, 'l3_conv')
   # l4_out is [-1, 7, 7, 8]
   l4_out = build_pool_layer(l3_out, 2, 2, 2, 'l4_pool')
-  
+
   # reshape
   fc_input = tf.reshape(l4_out, shape=[-1, 7 * 7 * 8])
   #l5_out is [-1, 200]
@@ -104,19 +105,20 @@ def build_cnn_with_pool(features, labels):
   loss = build_loss(output, labels)
   lr, train_step = build_train_step(loss)
 
-  return accuracy, loss, lr, train_step
+  return accuracy, loss, lr, train_step, l1_out, l2_out
 
 
 def main():
   features = tf.placeholder(tf.float32, [None, 28, 28, 1])
   labels = tf.placeholder(tf.float32, [None, 10])
   #accuracy, loss, lr, train_step, l1_out, l2_out, l3_out = build_cnn_network(features, labels)
-  accuracy, loss, lr, train_step = build_cnn_with_pool(features, labels)
+  accuracy, loss, lr, train_step, l1_out, l2_out = build_cnn_with_pool(features, labels)
 
   tf.summary.scalar('accuracy', accuracy)
   tf.summary.scalar('loss', loss)
   tf.summary.scalar('lr', lr)
-  #tf.summary.image('l1_out', l1_out)
+#  tf.summary.image('l1_out', l1_out)
+#  tf.summary.image('l2_out', l2_out)
 
   # l2_out [None, 14, 14, 8]
   #tf.summary.image('l2_out', tf.reshape(l2_out, [-1, 14, 28, 4]))

@@ -75,17 +75,24 @@ def build_cnn_network(features, labels):
   loss = build_loss(output, labels)
   lr, train_step = build_train_step(loss)
 
-  return accuracy, loss, lr, train_step
+  return accuracy, loss, lr, train_step, l1_out, l2_out, l3_out
 
 
 def main():
   features = tf.placeholder(tf.float32, [None, 28, 28, 1])
   labels = tf.placeholder(tf.float32, [None, 10])
-  accuracy, loss, lr, train_step = build_cnn_network(features, labels)
+  accuracy, loss, lr, train_step, l1_out, l2_out, l3_out = build_cnn_network(features, labels)
 
   tf.summary.scalar('accuracy', accuracy)
   tf.summary.scalar('loss', loss)
   tf.summary.scalar('lr', lr)
+  tf.summary.image('l1_out', l1_out)
+
+  # l2_out [None, 14, 14, 8]
+  tf.summary.image('l2_out', tf.reshape(l2_out, [-1, 14, 28, 4]))
+
+  # l3_out [None, 7, 7, 12]
+  tf.summary.image('l3_out', tf.reshape(l3_out, [-1, 7, 21, 4]))
   merged = tf.summary.merge_all()
 
   sess = tf.InteractiveSession()

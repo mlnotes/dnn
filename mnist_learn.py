@@ -24,7 +24,8 @@ def build_output_layer(in_tensor, out_size, name):
     w = tf.Variable(tf.truncated_normal([in_size, out_size], stddev=0.1), name='weights')
     # w = tf.Variable(tf.zeros([in_size, out_size]), name='weights')
     b = tf.Variable(tf.zeros([out_size]), name='bias')
-    return tf.nn.softmax(tf.matmul(in_tensor, w) + b)
+    #return tf.nn.softmax(tf.matmul(in_tensor, w) + b)
+    return tf.matmul(in_tensor, w) + b
 
 def build_loss(out_tensor, labels):
   with tf.name_scope('loss'):

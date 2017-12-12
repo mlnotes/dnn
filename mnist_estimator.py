@@ -2,6 +2,7 @@
 
 import math
 import tensorflow as tf
+from tensorflow.contrib.learn import learn_runner
 from tensorflow.examples.tutorials.mnist import input_data
 
 LOG_DIR = '/tmp/est_logs'
@@ -70,7 +71,64 @@ def train(train_step, features, labels, lr, training, merged_summary):
         test_writer.add_summary(summary, i)
 
 
+# estimator
+def make_input_fn(images, digits, num_epochs=None):
+  return tf.estimator.inputs.numpy_input_fn(
+      x={'x': images},
+      y=digits.astype(int),
+      num_epochs=num_epochs,
+      shuffle=True)
+
+def make_estimator():
+  mnist = input_data.read_data_sets('MNIST_data', one_hot=False, reshape=True)
+  feature_columns = [
+      tf.feature_column.numeric_column('x', shape=[28 * 28 * 1])
+  ]
+  classifier = tf.estimator.DNNClassifier(feature_columns=feature_columns,
+                                          hidden_units=[200, 100, 60, 30],
+                                          n_classes=10,
+                                          model_dir='/tmp/est_model')
+
+  classifier.train(input_fn=make_input_fn(mnist.train.images, mnist.train.labels),
+                   steps=5000)
+  accuracy_score = classifier.evaluate(input_fn=make_input_fn(mnist.test.images,
+                                                              mnist.test.labels,
+                                                              num_epochs=1))
+
+  print 'HF: acc:', accuracy_score
+
+
+def make_experiment(run_config, params):
+  mnist = input_data.read_data_sets('MNIST_data', one_hot=False, reshape=True)
+  feature_columns = [
+      tf.feature_column.numeric_column('x', shape=[28 * 28 * 1])
+  ]
+  classifier = tf.estimator.DNNClassifier(feature_columns=feature_columns,
+                                          hidden_units=[200, 100, 60, 30],
+                                          n_classes=10,
+                                          config=run_config)
+
+  return tf.contrib.learn.Experiment(
+      estimator=classifier,
+      train_input_fn=make_input_fn(mnist.train.images, mnist.train.labels),
+      eval_input_fn=make_input_fn(mnist.validation.images, mnist.validation.labels, num_epochs=1),
+      train_steps=5000)
+
+
 def main():
+  run_config = tf.contrib.learn.RunConfig()
+  run_config = run_config.replace(
+      model_dir='/tmp/est_model',
+      save_summary_steps=1,
+      save_checkpoints_steps=10
+  )
+
+  learn_runner.run(experiment_fn=make_experiment,
+                   run_config=run_config,
+                   schedule='train_and_evaluate')
+
+
+def main1():
   features = tf.placeholder(tf.float32, [None, 28, 28, 1], name='features')
   labels = tf.placeholder(tf.float32, [None, 10], name='labels')
   lr = tf.placeholder(tf.float32, name='learning_rate')

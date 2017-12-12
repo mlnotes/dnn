@@ -9,16 +9,16 @@ from tensorflow.examples.tutorials.mnist import input_data
 
 def build_network(features, is_training):
  # with tf.variable_scope('network'):
-  conv1 = tf.layers.conv2d(inputs=features, filters=2, kernel_size=5,
+  conv1 = tf.layers.conv2d(inputs=features, filters=4, kernel_size=5,
                            strides=1, padding='same', name='conv1', trainable=True)
   pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=2,
                                   strides=2, padding='same', name='max_pool1')
-  conv2 = tf.layers.conv2d(inputs=pool1, filters=4, kernel_size=4,
+  conv2 = tf.layers.conv2d(inputs=pool1, filters=8, kernel_size=5,
                            strides=1, padding='same', name='conv2')
   pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=2,
                                   strides=2, padding='same', name='max_pool2')
 
-  fc_input = tf.reshape(pool2, [-1, 7 * 7 * 4])
+  fc_input = tf.reshape(pool2, [-1, 7 * 7 * 8])
 
   fc1 = tf.layers.dense(inputs=fc_input, units=200, activation=tf.nn.relu, name='fc1')
   dropout = tf.layers.dropout(inputs=fc1, rate=0.75, training=is_training, name='dropout')
@@ -36,7 +36,7 @@ def make_input_fn(images, digits, num_epochs=None):
 def make_train_op(loss, hparams):
   lr_decay_fn = functools.partial(
       tf.train.exponential_decay,
-      decay_rate=0.5,
+      decay_rate=0.7,
       decay_steps=1000,
       staircase=False)
 
@@ -83,17 +83,17 @@ def experiment_fn(run_config, hparams):
       estimator=make_estimator(run_config, hparams),
       train_input_fn=make_input_fn(mnist.train.images, mnist.train.labels),
       eval_input_fn=make_input_fn(mnist.validation.images, mnist.validation.labels),
-      train_steps=5000)
+      train_steps=10001)
 
 
 def main():
   run_config = tf.contrib.learn.RunConfig(
       model_dir='/tmp/cus_model',
-      save_summary_steps=1,
-      save_checkpoints_steps=10)
+      save_summary_steps=100,
+      save_checkpoints_steps=100)
 
   hparams = tf.contrib.training.HParams(
-      learning_rate=0.002)
+      learning_rate=0.003)
 
   learn_runner.run(experiment_fn=experiment_fn,
                    run_config=run_config,

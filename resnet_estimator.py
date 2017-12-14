@@ -11,13 +11,13 @@ units_between_stride = total_layers / 5
 
 def build_res_net_block(inputs, i):
   with tf.variable_scope("res_unit_%d" % i):
-    part1 = tf.contrib.slim.batch_norm(inputs)
-    part2 = tf.nn.relu(part1)
-    part3 = tf.contrib.slim.conv2d(part2, 64, [3, 3], activation_fn=None)
-    part4 = tf.contrib.slim.batch_norm(part3)
-    part5 = tf.nn.relu(part4)
-    part6 = tf.contrib.slim.conv2d(part5, 64, [3, 3], activation_fn=None)
-    outputs = inputs + part6
+    bn = tf.contrib.slim.batch_norm(inputs)
+    relu = tf.nn.relu(bn)
+    conv = tf.contrib.slim.conv2d(relu, 64, [3, 3], activation_fn=None)
+    bn = tf.contrib.slim.batch_norm(conv)
+    relu = tf.nn.relu(bn)
+    conv = tf.contrib.slim.conv2d(relu, 64, [3, 3], activation_fn=None)
+    outputs = inputs + conv
     return outputs
 
 

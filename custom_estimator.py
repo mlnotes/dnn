@@ -86,7 +86,7 @@ def experiment_fn(run_config, hparams):
       train_steps=10001)
 
 
-def main():
+def main(_):
   run_config = tf.contrib.learn.RunConfig(
       model_dir='/tmp/cus_model',
       save_summary_steps=100,
@@ -102,4 +102,4 @@ def main():
 
 
 if __name__ == '__main__':
-  main()
+  tf.app.run()
